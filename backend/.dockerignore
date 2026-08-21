@@ -1,0 +1,34 @@
+# backend/.dockerignore
+# 排除本地开发环境，避免泄露密钥、膨胀镜像
+
+# Python 虚拟环境
+.venv/
+venv/
+
+# Python 编译缓存
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*.pyo
+
+# 测试 & 覆盖率
+.pytest_cache/
+.coverage
+htmlcov/
+
+# 运行时日志（容器内由 volume 挂载处理）
+logs/
+*.log
+
+# 本地环境变量（含密钥，绝不打入镜像）
+.env
+.env.prod
+.env.local
+
+# IDE
+.idea/
+.vscode/
+
+# 临时文件
+*.tmp
+*.bak

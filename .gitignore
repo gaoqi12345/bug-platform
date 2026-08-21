@@ -1,0 +1,75 @@
+# ── IDE ──────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# ── OS ───────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Python / 后端 ─────────────────────────────────────────────
+backend/.venv/
+backend/__pycache__/
+backend/**/__pycache__/
+backend/**/*.py[cod]
+backend/.pytest_cache/
+backend/.coverage
+backend/logs/
+backend/*.log
+backend/uvicorn.log
+backend/uvicorn_err.log
+
+# uv.lock 入库（保证所有人/CI 使用完全一致的依赖版本）
+# pyproject.toml 也入库，requirements.txt 可选保留做向后兼容
+
+# 环境变量（历史遗留，已迁移到 config.toml）
+# backend/.env 和 backend/.env.prod 不再使用
+
+# ── Node / 前端 ───────────────────────────────────────────────
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Vite 脚手架默认模板文件（已从项目中移除）
+frontend/src/counter.ts
+frontend/src/style.css
+frontend/src/assets/vite.svg
+frontend/src/assets/typescript.svg
+frontend/src/assets/hero.png
+frontend/public/icons.svg
+
+# ── Docker ───────────────────────────────────────────────────
+# docker-compose.yml 入库（部署配置）
+# 根目录 .env 为本地 Docker 数据路径配置（DATA_ROOT），不入库
+# 本地中间件数据目录（PostgreSQL/Redis/MinIO/日志），不入库
+docker-data/
+.env
+
+# ── 构建产物 ──────────────────────────────────────────────────
+build/
+*.egg-info/
+
+# Docker 镜像导出文件
+*.tar
+
+# ── 数据库文件（本地 SQLite，测试用）─────────────────────────
+*.db
+*.sqlite3
+
+# ── 日志（根目录兜底）────────────────────────────────────────
+*.log
+
+# ── 临时文件 ──────────────────────────────────────────────────
+*.tmp
+*.bak
+/.omo/
+/docs/import_users.csv
+
+# ── 内部文档（AI 指令 / 规划文档，不对外公开）─────────────────
+AGENTS.md
+/temp/
+/.playwright-mcp/
+
+# 临时脚本（含硬编码数据库地址，不入库）
+backend/temp/

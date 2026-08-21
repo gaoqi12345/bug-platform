@@ -1,0 +1,109 @@
+services:
+
+  # ── 数据库 ──────────────────────────────────────────────────
+  # 数据持久化：/data/pgdata 挂载到 /var/lib/postgresql/data
+  # 数据存储在宿主机独立数据盘（bind mount），docker-compose down 不会删除数据
+  # 彻底清除数据：sudo rm -rf /data/pgdata（与 named volume 不同，down -v 不影响 bind mount）
+  postgres:
+    image: postgres:15
+    container_name: bug-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       bugplatform
+      POSTGRES_USER:     ${POSTGRES_USER:-buguser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-bugpass}
+    volumes:
+      - ${DATA_ROOT:-/data}/pgdata:/var/lib/postgresql/data      # 数据库文件持久化
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER:-buguser}", "-d", "bugplatform"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # ── 文件存储 ─────────────────────────────────────────────────
+  # 数据持久化：所有上传的文件存储在 /data/miniodata，挂载到 /data
+  # MinIO Console（管理界面）：http://<host>:9001
+  # 默认凭据（开发用）：minioadmin / minioadmin — 生产环境请通过 .env.prod 修改
+  minio:
+    image: minio/minio
+    container_name: bug-minio
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER:     ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    volumes:
+      - ${DATA_ROOT:-/data}/miniodata:/data                      # 对象存储文件持久化
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── 后端 ────────────────────────────────────────────────────
+  # entrypoint.sh 自动执行：alembic upgrade head → gunicorn 启动
+  # config.toml 挂载到容器内，修改配置后重启容器即可生效
+  # 日志持久化：/data/backendlogs 挂载到容器 /app/logs
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: bug-backend
+    restart: unless-stopped
+    volumes:
+      - ./backend/config.toml:/app/config.toml:ro  # 配置文件（只读挂载）
+      - ${DATA_ROOT:-/data}/backendlogs:/app/logs   # 应用日志持久化
+    ports:
+      - "8002:8001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+  # ── 前端 ────────────────────────────────────────────────────
+  # Nginx 提供静态文件，并将 /api/ 反向代理到后端
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: bug-frontend
+    restart: unless-stopped
+    ports:
+      - "8081:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+# ═══════════════════════════════════════════════════════════════
+# 持久化说明（bind mount 到宿主机数据目录）
+# ═══════════════════════════════════════════════════════════════
+# 数据保存在 ${DATA_ROOT:-/data} 目录下：
+#   - 本地开发：根目录 .env 已设 DATA_ROOT=./docker-data
+#     → 数据在项目目录 docker-data/{pgdata,miniodata,backendlogs}
+#   - 生产服务器：不设 DATA_ROOT（或 export DATA_ROOT=/data）默认存 /data
+#     → 独立数据盘挂载到 /data 后即可
+#
+# Ubuntu 生产部署前准备（独立数据盘挂载到 /data 后执行）：
+#   sudo mkdir -p /data/pgdata /data/miniodata /data/backendlogs
+#   sudo chown -R 999:999  /data/pgdata      # postgres 容器用户 UID
+#   sudo chown -R 1000:1000 /data/miniodata  # minio 容器用户 UID
+#   sudo chown -R 0:0      /data/backendlogs # 后端以 root 运行，默认即可
+#
+# 备份：
+#   sudo docker exec bug-postgres pg_dump -U buguser bugplatform > backup_$(date +%Y%m%d).sql
+#   sudo cp -r /data/miniodata /backup/minio/
+# 彻底清除数据（不可恢复）：sudo rm -rf /data/pgdata /data/miniodata
+# ⚠️ 注意：docker-compose down -v 只删除 named volume，对 bind mount 无效；
+#    bind mount 数据只能通过手动 rm 删除（对数据更安全）。

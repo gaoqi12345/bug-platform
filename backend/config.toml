@@ -1,0 +1,86 @@
+# ============================================================
+# Bug Platform — 配置文件
+# 克隆项目后直接编辑此文件，无需任何额外步骤
+#
+# 运行环境自动检测：
+#   本地开发 → 使用 [database] / [minio] 中的默认值
+#   Docker   → 自动用 [docker.database] / [docker.minio] 覆盖
+#              检测依据：容器内存在环境变量 RUNNING_IN_DOCKER=1
+# ============================================================
+
+[database]
+# PostgreSQL 连接配置（本地 Docker 容器 bug-postgres，宿主端口 5432）
+host     = "localhost"
+port     = 5432
+name     = "bugplatform"
+user     = "buguser"
+password = "bugpass"
+
+[minio]
+# MinIO 对象存储（本地 Docker 容器 bug-minio，宿主端口 9000）
+# external_endpoint：浏览器预签名 URL 用的地址，必须是浏览器能访问到的地址
+# Docker 部署时请修改 [docker.minio] 中的 external_endpoint 为宿主机 IP
+endpoint          = "localhost:9000"
+external_endpoint = "localhost:9000"
+access_key        = "minioadmin"
+secret_key        = "minioadmin"
+secure            = false
+bucket_attachments = "bug-attachments"
+bucket_exports     = "bug-exports"
+
+[auth]
+# JWT 签名密钥
+# 生产部署建议修改为随机强密钥：python -c "import secrets; print(secrets.token_hex(32))"
+secret_key                  = "dev-secret-key-change-in-prod"
+access_token_expire_minutes = 43200   # 30 天（43200 分钟）
+refresh_token_expire_days   = 7
+
+[app]
+# 应用基础配置
+# base_url：对外访问地址，用于飞书通知跳转链接
+base_url     = "http://localhost:8081"
+log_level    = "INFO"         # DEBUG / INFO / WARNING / ERROR
+
+[feishu]
+# 飞书机器人通知（不用则留空，留空自动跳过）
+webhook_url    = ""
+webhook_secret = ""
+# ── 飞书自建应用（个人私聊消息 + 卡片交互按钮需要，留空则私聊通道不可用）──
+# 在飞书开放平台创建「企业自建应用」后填入，并开启机器人能力：
+#   - 权限：im:message（或 im:message:send_as_bot）
+#   - 可用范围：需包含所有被指派用户，否则私聊发送报错 230013
+#   - 回调：在「事件与回调 → 回调配置」订阅「卡片回传交互」(card.action.trigger)
+#     投递方式选「使用长连接接收回调」→ 本地开发无需公网 URL
+app_id             = ""
+app_secret         = ""
+verification_token = ""   # 回调安全校验用（开发者后台「加密策略」的 Verification Token）
+
+[email]
+# 邮件通知（enabled = false 时自动跳过，不影响其他功能）
+enabled       = false
+smtp_host     = ""
+smtp_port     = 465
+smtp_user     = ""
+smtp_password = ""
+smtp_use_ssl  = true
+from_name     = "Bug Platform"
+
+# ============================================================
+# Docker 部署覆盖配置
+# 以下配置在 Docker 容器内自动生效，覆盖上方对应的值
+# 使用 Docker 部署时只需修改这里的 external_endpoint 和 base_url
+# ============================================================
+
+[docker.database]
+# Docker 内部服务名（固定，无需修改）
+host = "postgres"
+
+[docker.minio]
+# endpoint：Docker 内部服务名（固定，无需修改）
+# external_endpoint：改为宿主机 IP 或域名，浏览器需能访问
+endpoint          = "minio:9000"
+external_endpoint = "localhost:9000"    # ← Docker 部署时改为宿主机 IP，如 192.168.1.100:9000
+
+[docker.app]
+# base_url：改为宿主机 IP 或域名
+base_url = "http://localhost:8081"      # ← Docker 部署时改为宿主机 IP，如 http://192.168.1.100:8080
