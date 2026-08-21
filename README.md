@@ -1,6 +1,40 @@
 # Bug Platform — 缺陷管理平台
 
+> **个人爱好项目**：本项目是个人开发的练习项目，目前仍在持续更新中，功能会不断完善。
+> 如果在使用过程中遇到任何问题，欢迎随时通过 [Issues](https://github.com/gaoqi12345/bug-platform/issues) 提出，我会尽快回复处理。
+
 一个基于 FastAPI + Vue 3 的轻量级缺陷管理系统，支持 Bug 全生命周期管理、RBAC 权限控制、测试用例管理、MinIO 文件存储和飞书通知。
+
+## 界面预览
+
+<p align="center">
+  <img src="docs/screenshots/工作台.png" width="48%" alt="工作台" />
+  <img src="docs/screenshots/bug列表.png" width="48%" alt="Bug 列表" />
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/测试用例.png" width="48%" alt="测试用例" />
+  <img src="docs/screenshots/统计报表.png" width="48%" alt="统计报表" />
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/项目设置-成员管理.png" width="48%" alt="项目设置-成员管理" />
+  <img src="docs/screenshots/项目设置-版本管理.png" width="48%" alt="项目设置-版本管理" />
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/系统管理-团队管理.png" width="48%" alt="系统管理-团队管理" />
+  <img src="docs/screenshots/系统设置-用户管理.png" width="48%" alt="系统设置-用户管理" />
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/系统设置-角色管理.png" width="48%" alt="系统设置-角色管理" />
+  <img src="docs/screenshots/系统设置-项目管理.png" width="48%" alt="系统设置-项目管理" />
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/系统设置-流程管理.png" width="48%" alt="系统设置-流程管理" />
+</p>
 
 ## 技术栈
 
